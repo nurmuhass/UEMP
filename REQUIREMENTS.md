@@ -1,50 +1,45 @@
 # UEMP assessment checklist and permission matrix
 
-Source: *LEAD WEB PRAXIS MEDIA LIMITED.docx*, University Education Management Portal assessment. This delivery covers the requested foundation. Open items track the rest of the assessment MVP and submission requirements.
+Source: *LEAD WEB PRAXIS MEDIA LIMITED.docx*, University Education Management Portal assessment.
 
-## Implemented foundation
+## Implemented
 
-- [x] Secure login, role-based redirection, POST logout, password hashes, session rotation, and server-side CSRF checks.
-- [x] Server-side role guards and live account-status checks. Suspended and deactivated users are blocked.
-- [x] Four role dashboards. Student views own profile, registrations, units, and approved scores for the current semester. Lecturer views assigned offerings. Department admin views department offerings and review counts. Super admin views both departments.
-- [x] Relational schema for faculties, departments, programs, users, student profiles, sessions, semesters, offerings, registrations, and results. Unique keys prevent duplicate registrations for the same offering and duplicate offerings for a course in a semester.
-- [x] Plain PHP, PDO prepared statements, environment-based database credentials, shared PHP templates, Bootstrap, and vanilla JavaScript.
-- [x] Versioned SQL, repeatable demo setup, test credentials, and linked sample academic records in two departments.
-- [x] Current-semester offering browsing, registration, unit totals, print summary, and department-scoped registration lists.
-- [x] Responsive tables, escaped output, generic authentication errors, and role and status verification.
+- [x] Login, logout, role-based redirection, password hashes, session rotation, CSRF, and live account-status checks.
+- [x] Four role dashboards with server-side role and record-scope enforcement.
+- [x] Student profile editing for name and phone. Email, matriculation number, program, department, and level are managed by authorized administrators.
+- [x] Current-semester course selection and registration. The server checks department, program, level, and semester, and the database prevents duplicate registrations.
+- [x] Registered courses and unit totals, printable registration summary, approved academic history, semester GPA, CGPA, and printable result statement.
+- [x] Lecturer class lists, validated CA and exam entry, calculated totals and grades, draft saving, submission, feedback, and course performance summaries.
+- [x] Department result review, approval, rejection, correction, and resubmission. Submitted and approved scores are locked. Score changes and transitions are audited in the same transaction.
+- [x] Department management of student accounts and profiles, lecturer accounts, programs, academic levels, courses, and allocations. Registration lists, rosters, and performance reports are scoped to the assigned department.
+- [x] University management of faculties, departments, programs, academic levels, accounts, role assignments, account statuses, sessions, semesters, current-term selection, courses, and allocations.
+- [x] University-wide registration and result monitoring, course performance reporting, and result and administrative audit views.
+- [x] PHP and PDO with prepared statements, relational MySQL schema, public web root, environment-based configuration, shared responsive templates, versioned migrations, and demo credentials.
+- [x] End-to-end verification for authentication, registration, result review and publication, and management and reporting.
 
-## Remaining assessment MVP
+## Remaining or limited
 
-- [ ] Student self-service profile editing.
-- [ ] Student academic history, semester grades, GPA and CGPA, and printable result statement. Document or configure grade boundaries and use credit-unit-weighted GPA.
-- [x] Lecturer class lists, per-student CA and exam entry, calculated totals and grades, draft save, submission, and feedback.
-- [ ] Lecturer performance summaries.
-- [ ] Departmental student registration, lecturer profile management, course management and allocations, academic levels and programs, and reports.
-- [x] Departmental result review, approval, rejection, and return for correction. Require submission before approval, block self-approval, lock submitted results until authorized reopening, and audit every submission, modification, approval, and rejection.
-- [ ] Super-admin management of faculties, departments, programs, users, account statuses, roles and permissions, sessions, semesters, courses, and allocations. Add university-wide registration and approval monitoring, reports, and activity logs.
-- [x] Verify registration and the rejection, correction, resubmission, approval, and publication flow.
-- [ ] Assessment submission package with live URL, GitHub source link, and short video or live demonstration. Setup, credentials, schema, and architecture notes are in this workspace.
+- [ ] Assessment submission package. A deployed public URL, submission-ready source repository link, and a short walkthrough or live demonstration still need to be supplied.
+- [ ] Custom permission policies, if the assessor expects editable permissions beyond role assignment. The portal assigns one of the four assessment roles and enforces a fixed permission matrix.
+- [ ] If required, add record retirement and paginated or searchable audit history. Management supports create and edit, with account suspension and deactivation. Referenced academic records are preserved, and monitoring displays the latest 100 events from each audit trail.
 
 Assessment exclusions include payments, accommodation, admissions, biometric attendance, messaging gateways, mobile apps, transcript certification, and external university integrations.
 
 ## Role-permission matrix
 
-**Live** means enforced or available in this foundation. **Planned** means required by the assessment and tracked above. A dash denotes no grant.
-
 | Permission | Student | Lecturer | Department Admin | Super Admin |
 | --- | --- | --- | --- | --- |
-| Open role dashboard | Live · student | Live · lecturer | Live · department | Live · university |
-| Read student academic records | Live · own profile, registrations, approved current scores | Live · assigned classes | Live · department registrations and review counts | Planned · university oversight |
-| Read offerings | Live · eligible offerings and own registrations | Live · assigned offerings | Live · department offerings | Live · counts by department |
-| Update personal profile, register courses, print summaries | Live · eligible offerings and own print summary. Planned · profile editing | — | — | — |
-| Manage student and lecturer profiles | — | — | Planned · own department | Planned · university-wide |
-| Manage courses and lecturer allocations | — | — | Planned · own department | Planned · university-wide |
-| Manage academic levels and programs | — | — | Planned · own department | Planned · programs university-wide |
-| Enter scores, save drafts, submit and view feedback | — | Live · assigned offerings | — | — |
-| Approve, reject or return submitted results | — | — | Live · own department | Planned · oversight |
-| Academic reporting | Planned · own history and GPA | Planned · assigned classes | Planned · own department | Planned · university-wide |
-| Manage faculties, departments, sessions and semesters | — | — | — | Planned |
-| Manage account statuses, roles, permissions and system settings | — | — | — | Planned |
-| Monitor activity and administrative audit trails | — | — | Live · departmental result review | Planned · university-wide |
+| Open role dashboard | Student | Lecturer | Department | University |
+| Read academic records | Own registrations and approved results | Registered students in assigned offerings | Department rosters, registrations, and review queue | University monitoring and audit |
+| Read offerings | Own eligible and registered offerings | Assigned offerings | Own department | University-wide |
+| Edit profile, register courses, and print summaries | Own permitted fields and academic records | — | — | — |
+| Manage student and lecturer accounts | — | — | Own department | University-wide |
+| Manage courses, allocations, programs, and academic levels | — | — | Own department | University-wide |
+| Enter scores, save drafts, submit, and view feedback | — | Assigned offerings | — | — |
+| Approve or reject submitted results | — | — | Own department | Oversight |
+| View academic reports | Own history and GPA | Assigned offerings | Own department | University-wide |
+| Manage faculties, departments, sessions, semesters, and current term | — | — | — | University-wide |
+| Assign roles and activate, suspend, or deactivate accounts | — | — | — | University-wide |
+| Read administrative and result audit history | — | — | Review status and feedback for departmental results | University-wide |
 
-The dashboard routes use exact role matching. The university dashboard gives super admins their own aggregate view. Department IDs, lecturer assignments, and student IDs come from the authenticated account and database relationships.
+Dashboard routes use exact role matching. Department IDs, lecturer assignments, and student IDs come from the authenticated account and database relationships.

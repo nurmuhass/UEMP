@@ -10,11 +10,20 @@
         <?php endforeach ?>
     </dl>
 <?php endif ?>
-<?php if ($data['user']['role'] === 'lecturer'): ?>
-    <p><a class="btn btn-primary" href="index.php?r=lecturer_results">Class lists and results</a></p>
-<?php elseif ($data['user']['role'] === 'department_admin'): ?>
-    <p><a class="btn btn-primary" href="index.php?r=review_results">Review results</a></p>
-<?php endif ?>
+<?php
+$links = match ($data['user']['role']) {
+    'student' => ['student_profile' => 'Edit profile', 'academic_history' => 'Academic history'],
+    'lecturer' => ['lecturer_results' => 'Class lists and results', 'lecturer_reports' => 'Course performance'],
+    'department_admin' => ['manage_department' => 'Manage department', 'review_results' => 'Review results',
+        'department_reports' => 'Department reports'],
+    'super_admin' => ['manage_university' => 'Manage university', 'university_reports' => 'Monitoring and audit'],
+};
+?>
+<nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Dashboard tools">
+    <?php foreach ($links as $route => $label): ?>
+        <a class="btn btn-outline-primary" href="index.php?r=<?= e($route) ?>"><?= e($label) ?></a>
+    <?php endforeach ?>
+</nav>
 <?php require __DIR__ . '/records.php'; ?>
 <?php if ($data['user']['role'] === 'student'): ?>
     <p class="mt-3"><strong>Total units:</strong> <?= $data['totalUnits'] ?></p>

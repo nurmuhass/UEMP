@@ -18,13 +18,13 @@ try {
     }
 
     $route = $_GET['r'] ?? 'login';
-    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout', 'register', 'registration_summary', 'lecturer_results', 'review_results'], true))) {
+    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout', 'register', 'registration_summary', 'lecturer_results', 'review_results', 'manage_university', 'manage_department', 'student_profile', 'academic_history', 'result_statement', 'lecturer_reports', 'department_reports', 'university_reports'], true))) {
         page('message', 'Page unavailable', ['message' => 'The requested page could not be found.'], 404);
     }
 
     $method = $_SERVER['REQUEST_METHOD'];
     $allowed = match ($route) {
-        'login', 'lecturer_results', 'review_results' => ['GET', 'POST'],
+        'login', 'lecturer_results', 'review_results', 'manage_university', 'manage_department', 'student_profile' => ['GET', 'POST'],
         'logout', 'register' => ['POST'],
         default => ['GET'],
     };
@@ -66,6 +66,22 @@ try {
         }
         $_SESSION = ['user_id' => $user['id'], 'role' => $user['role'], 'last_seen' => time()];
         redirect($user['role'], 303);
+    }
+
+    if (in_array($route, ['manage_university', 'manage_department'], true)) {
+        require __DIR__ . '/../app/manage.php';
+        management_route($route, $method);
+    }
+    if (in_array($route, ['student_profile', 'academic_history', 'result_statement'], true)) {
+        require __DIR__ . '/../app/student_academics.php';
+        if ($route === 'student_profile') {
+            student_profile_route($method);
+        }
+        student_history_route($route === 'result_statement');
+    }
+    if (in_array($route, ['lecturer_reports', 'department_reports', 'university_reports'], true)) {
+        require __DIR__ . '/../app/reports.php';
+        reports_route($route);
     }
 
     if (in_array($route, ['lecturer_results', 'review_results'], true)) {
