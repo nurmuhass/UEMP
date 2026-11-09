@@ -10,6 +10,11 @@
         <?php endforeach ?>
     </dl>
 <?php endif ?>
+<?php if ($data['user']['role'] === 'lecturer'): ?>
+    <p><a class="btn btn-primary" href="index.php?r=lecturer_results">Class lists and results</a></p>
+<?php elseif ($data['user']['role'] === 'department_admin'): ?>
+    <p><a class="btn btn-primary" href="index.php?r=review_results">Review results</a></p>
+<?php endif ?>
 <?php require __DIR__ . '/records.php'; ?>
 <?php if ($data['user']['role'] === 'student'): ?>
     <p class="mt-3"><strong>Total units:</strong> <?= $data['totalUnits'] ?></p>

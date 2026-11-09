@@ -17,11 +17,12 @@ Source: *LEAD WEB PRAXIS MEDIA LIMITED.docx*, University Education Management Po
 
 - [ ] Student self-service profile editing.
 - [ ] Student academic history, semester grades, GPA and CGPA, and printable result statement. Document or configure grade boundaries and use credit-unit-weighted GPA.
-- [ ] Lecturer class lists, per-student CA and exam entry, validation, calculated totals and grades, draft save, submission, feedback, and performance summaries.
+- [x] Lecturer class lists, per-student CA and exam entry, calculated totals and grades, draft save, submission, and feedback.
+- [ ] Lecturer performance summaries.
 - [ ] Departmental student registration, lecturer profile management, course management and allocations, academic levels and programs, and reports.
-- [ ] Departmental result review, approval, rejection, and return for correction. Require submission before approval, block self-approval, lock submitted results until authorized reopening, and audit every submission, modification, approval, and rejection.
+- [x] Departmental result review, approval, rejection, and return for correction. Require submission before approval, block self-approval, lock submitted results until authorized reopening, and audit every submission, modification, approval, and rejection.
 - [ ] Super-admin management of faculties, departments, programs, users, account statuses, roles and permissions, sessions, semesters, courses, and allocations. Add university-wide registration and approval monitoring, reports, and activity logs.
-- [ ] Exercise the full registration and result-approval workflows once the write paths exist.
+- [x] Verify registration and the rejection, correction, resubmission, approval, and publication flow.
 - [ ] Assessment submission package with live URL, GitHub source link, and short video or live demonstration. Setup, credentials, schema, and architecture notes are in this workspace.
 
 Assessment exclusions include payments, accommodation, admissions, biometric attendance, messaging gateways, mobile apps, transcript certification, and external university integrations.
@@ -33,17 +34,17 @@ Assessment exclusions include payments, accommodation, admissions, biometric att
 | Permission | Student | Lecturer | Department Admin | Super Admin |
 | --- | --- | --- | --- | --- |
 | Open role dashboard | Live · student | Live · lecturer | Live · department | Live · university |
-| Read student academic records | Live · own profile, registrations, approved current scores | Planned · assigned classes | Live · department registrations and review counts | Planned · university oversight |
+| Read student academic records | Live · own profile, registrations, approved current scores | Live · assigned classes | Live · department registrations and review counts | Planned · university oversight |
 | Read offerings | Live · eligible offerings and own registrations | Live · assigned offerings | Live · department offerings | Live · counts by department |
 | Update personal profile, register courses, print summaries | Live · eligible offerings and own print summary. Planned · profile editing | — | — | — |
 | Manage student and lecturer profiles | — | — | Planned · own department | Planned · university-wide |
 | Manage courses and lecturer allocations | — | — | Planned · own department | Planned · university-wide |
 | Manage academic levels and programs | — | — | Planned · own department | Planned · programs university-wide |
-| Enter scores, save drafts, submit and view feedback | — | Planned · assigned offerings | — | — |
-| Approve, reject or return submitted results | — | — | Planned · own department | Planned · oversight |
+| Enter scores, save drafts, submit and view feedback | — | Live · assigned offerings | — | — |
+| Approve, reject or return submitted results | — | — | Live · own department | Planned · oversight |
 | Academic reporting | Planned · own history and GPA | Planned · assigned classes | Planned · own department | Planned · university-wide |
 | Manage faculties, departments, sessions and semesters | — | — | — | Planned |
 | Manage account statuses, roles, permissions and system settings | — | — | — | Planned |
-| Monitor activity and administrative audit trails | — | — | Planned · departmental result review | Planned · university-wide |
+| Monitor activity and administrative audit trails | — | — | Live · departmental result review | Planned · university-wide |
 
 The dashboard routes use exact role matching. The university dashboard gives super admins their own aggregate view. Department IDs, lecturer assignments, and student IDs come from the authenticated account and database relationships.

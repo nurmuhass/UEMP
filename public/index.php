@@ -18,13 +18,13 @@ try {
     }
 
     $route = $_GET['r'] ?? 'login';
-    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout', 'register', 'registration_summary'], true))) {
+    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout', 'register', 'registration_summary', 'lecturer_results', 'review_results'], true))) {
         page('message', 'Page unavailable', ['message' => 'The requested page could not be found.'], 404);
     }
 
     $method = $_SERVER['REQUEST_METHOD'];
     $allowed = match ($route) {
-        'login' => ['GET', 'POST'],
+        'login', 'lecturer_results', 'review_results' => ['GET', 'POST'],
         'logout', 'register' => ['POST'],
         default => ['GET'],
     };
@@ -66,6 +66,11 @@ try {
         }
         $_SESSION = ['user_id' => $user['id'], 'role' => $user['role'], 'last_seen' => time()];
         redirect($user['role'], 303);
+    }
+
+    if (in_array($route, ['lecturer_results', 'review_results'], true)) {
+        require __DIR__ . '/../app/results.php';
+        result_route($route, $method);
     }
 
     if ($route === 'register') {

@@ -30,6 +30,12 @@ function dashboard(array $user, bool $summary = false): array
                 }, $records);
             } else {
                 require_once __DIR__ . '/registration.php';
+                require_once __DIR__ . '/results.php';
+                $columns[] = 'Approved grade';
+                foreach ($records as &$record) {
+                    $record['grade'] = $record['score'] === null ? null : result_grade((int) $record['score']);
+                }
+                unset($record);
                 $available = available_offerings((int) $user['id']);
                 $notice = !empty($_SESSION['registration_notice']);
                 unset($_SESSION['registration_notice']);
