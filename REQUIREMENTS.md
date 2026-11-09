@@ -10,14 +10,15 @@ Source: *LEAD WEB PRAXIS MEDIA LIMITED.docx*, University Education Management Po
 - [x] Relational schema for faculties, departments, programs, users, student profiles, sessions, semesters, offerings, registrations, and results. Unique keys prevent duplicate registrations for the same offering and duplicate offerings for a course in a semester.
 - [x] Plain PHP, PDO prepared statements, environment-based database credentials, shared PHP templates, Bootstrap, and vanilla JavaScript.
 - [x] Versioned SQL, repeatable demo setup, test credentials, and linked sample academic records in two departments.
+- [x] Current-semester offering browsing, registration, unit totals, print summary, and department-scoped registration lists.
 - [x] Responsive tables, escaped output, generic authentication errors, and role and status verification.
 
 ## Remaining assessment MVP
 
-- [ ] Student self-service profile editing, eligible course browsing, and current-semester registration. Validate department, program, level, and semester on write.
-- [ ] Student academic history, semester grades, GPA and CGPA, printable registration summary, and result statement. Document or configure grade boundaries and use credit-unit-weighted GPA.
+- [ ] Student self-service profile editing.
+- [ ] Student academic history, semester grades, GPA and CGPA, and printable result statement. Document or configure grade boundaries and use credit-unit-weighted GPA.
 - [ ] Lecturer class lists, per-student CA and exam entry, validation, calculated totals and grades, draft save, submission, feedback, and performance summaries.
-- [ ] Departmental student registration, lecturer profile management, course management and allocations, academic levels and programs, registration review, and reports.
+- [ ] Departmental student registration, lecturer profile management, course management and allocations, academic levels and programs, and reports.
 - [ ] Departmental result review, approval, rejection, and return for correction. Require submission before approval, block self-approval, lock submitted results until authorized reopening, and audit every submission, modification, approval, and rejection.
 - [ ] Super-admin management of faculties, departments, programs, users, account statuses, roles and permissions, sessions, semesters, courses, and allocations. Add university-wide registration and approval monitoring, reports, and activity logs.
 - [ ] Exercise the full registration and result-approval workflows once the write paths exist.
@@ -32,9 +33,9 @@ Assessment exclusions include payments, accommodation, admissions, biometric att
 | Permission | Student | Lecturer | Department Admin | Super Admin |
 | --- | --- | --- | --- | --- |
 | Open role dashboard | Live · student | Live · lecturer | Live · department | Live · university |
-| Read student academic records | Live · own profile, registrations, approved current scores | Planned · assigned classes | Live · department registration and review counts | Planned · university oversight |
-| Read offerings | Live · own registrations | Live · assigned offerings | Live · department offerings | Live · counts by department |
-| Update personal profile, register courses, print summaries | Planned · own record and eligible courses | — | — | — |
+| Read student academic records | Live · own profile, registrations, approved current scores | Planned · assigned classes | Live · department registrations and review counts | Planned · university oversight |
+| Read offerings | Live · eligible offerings and own registrations | Live · assigned offerings | Live · department offerings | Live · counts by department |
+| Update personal profile, register courses, print summaries | Live · eligible offerings and own print summary. Planned · profile editing | — | — | — |
 | Manage student and lecturer profiles | — | — | Planned · own department | Planned · university-wide |
 | Manage courses and lecturer allocations | — | — | Planned · own department | Planned · university-wide |
 | Manage academic levels and programs | — | — | Planned · own department | Planned · programs university-wide |

@@ -10,28 +10,39 @@
         <?php endforeach ?>
     </dl>
 <?php endif ?>
-<section class="card shadow-sm">
-    <h2 class="card-header h5"><?= e($data['heading']) ?></h2>
-    <?php if ($data['records']): ?>
-        <div class="table-responsive">
-            <table class="table table-striped mb-0">
-                <thead><tr>
-                    <?php foreach ($data['columns'] as $column): ?>
-                        <th scope="col"><?= e($column) ?></th>
-                    <?php endforeach ?>
-                </tr></thead>
-                <tbody>
-                    <?php foreach ($data['records'] as $record): ?>
-                        <tr>
-                            <?php foreach ($record as $value): ?>
-                                <td><?= e((string) ($value ?? '—')) ?></td>
-                            <?php endforeach ?>
-                        </tr>
-                    <?php endforeach ?>
-                </tbody>
-            </table>
-        </div>
-    <?php else: ?>
-        <p class="card-body mb-0">No records for this semester.</p>
-    <?php endif ?>
-</section>
+<?php require __DIR__ . '/records.php'; ?>
+<?php if ($data['user']['role'] === 'student'): ?>
+    <p class="mt-3"><strong>Total units:</strong> <?= $data['totalUnits'] ?></p>
+    <a class="btn btn-outline-secondary" href="index.php?r=registration_summary">Registration summary</a>
+    <section class="mt-4">
+        <h2 class="h5">Available offerings</h2>
+        <?php if ($data['notice']): ?>
+            <p class="alert alert-success" role="status">Course registered.</p>
+        <?php endif ?>
+        <?php if (!$data['available']): ?>
+            <p>No eligible unregistered offerings this semester.</p>
+        <?php endif ?>
+        <ul class="list-group">
+            <?php foreach ($data['available'] as $offering): ?>
+                <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span><?= e($offering['code'] . ' · ' . $offering['title']) ?>
+                        (<?= e((string) $offering['units']) ?> units)</span>
+                    <form method="post" action="index.php?r=register">
+                        <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                        <input type="hidden" name="offering_id" value="<?= e((string) $offering['id']) ?>">
+                        <button class="btn btn-sm btn-primary">Register</button>
+                    </form>
+                </li>
+            <?php endforeach ?>
+        </ul>
+    </section>
+<?php elseif ($data['user']['role'] === 'department_admin'): ?>
+    <div class="mt-4">
+        <?php
+        $data['heading'] = 'Student registrations';
+        $data['columns'] = ['Matriculation number', 'Student', 'Code', 'Course', 'Units'];
+        $data['records'] = $data['departmentRegistrations'];
+        require __DIR__ . '/records.php';
+        ?>
+    </div>
+<?php endif ?>

@@ -18,14 +18,14 @@ try {
     }
 
     $route = $_GET['r'] ?? 'login';
-    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout'], true))) {
+    if (!is_string($route) || (!isset(ROLES[$route]) && !in_array($route, ['login', 'logout', 'register', 'registration_summary'], true))) {
         page('message', 'Page unavailable', ['message' => 'The requested page could not be found.'], 404);
     }
 
     $method = $_SERVER['REQUEST_METHOD'];
     $allowed = match ($route) {
         'login' => ['GET', 'POST'],
-        'logout' => ['POST'],
+        'logout', 'register' => ['POST'],
         default => ['GET'],
     };
     if (!in_array($method, $allowed, true)) {
@@ -68,7 +68,38 @@ try {
         redirect($user['role'], 303);
     }
 
-    $user = require_role($route);
+    if ($route === 'register') {
+        $user = require_role('student');
+        require_csrf();
+        if (array_diff(array_keys($_POST), ['csrf', 'offering_id']) ||
+            array_diff(array_keys($_GET), ['r'])) {
+            page('message', 'Invalid registration request', ['message' => 'Submit an offering from your own dashboard.'], 400);
+        }
+        $rawOffering = $_POST['offering_id'] ?? null;
+        $offering = is_string($rawOffering)
+            ? filter_var($rawOffering, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2147483647]])
+            : false;
+        if ($offering === false) {
+            page('message', 'Invalid offering', ['message' => 'Choose an offering from your dashboard.'], 400);
+        }
+
+        require __DIR__ . '/../app/registration.php';
+        $outcome = register_offering((int) $user['id'], $offering);
+        if ($outcome === 'duplicate') {
+            page('message', 'Already registered', ['message' => 'This course is already on your registration.'], 409);
+        }
+        if ($outcome === 'ineligible') {
+            page('message', 'Offering unavailable', ['message' => 'This offering is unavailable for your current registration.'], 422);
+        }
+        $_SESSION['registration_notice'] = true;
+        redirect('student', 303);
+    }
+
+    $user = require_role($route === 'registration_summary' ? 'student' : $route);
+    if ($route === 'registration_summary') {
+        require __DIR__ . '/../app/dashboard.php';
+        page('registration_summary', 'Course registration summary', dashboard($user, true));
+    }
     require __DIR__ . '/../app/dashboard.php';
     page('dashboard', ROLES[$route] . ' dashboard', dashboard($user));
 } catch (Throwable $error) {

@@ -9,7 +9,7 @@
     <script src="assets/portal.js" defer></script>
 </head>
 <body class="bg-body-tertiary">
-<header class="bg-primary text-white py-3">
+<header class="bg-primary text-white py-3 d-print-none">
     <div class="container d-flex justify-content-between align-items-center gap-3">
         <a class="text-white fw-semibold text-decoration-none" href="index.php">University Education Management Portal</a>
         <?php if (isset($data['user'])): ?>

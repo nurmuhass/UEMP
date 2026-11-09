@@ -9,3 +9,9 @@ if (password && toggle) {
         toggle.textContent = reveal ? 'Hide' : 'Show';
     });
 }
+
+const printSummary = document.querySelector('#print-summary');
+if (printSummary) {
+    printSummary.hidden = false;
+    printSummary.addEventListener('click', () => window.print());
+}

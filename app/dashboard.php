@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-function dashboard(array $user): array
+function dashboard(array $user, bool $summary = false): array
 {
     $term = rows('SELECT s.id, s.name, a.label FROM current_semester t
         JOIN semesters s ON s.id = t.semester_id JOIN academic_sessions a ON a.id = s.session_id')[0] ?? null;
@@ -21,6 +21,19 @@ function dashboard(array $user): array
                 LEFT JOIN results r ON r.student_id = g.student_id AND r.offering_id = g.offering_id
                     AND r.status = 'approved'
                 WHERE g.student_id = ? AND o.semester_id = ? ORDER BY c.code", [$user['id'], $semester]);
+            $totalUnits = array_sum(array_column($records, 'units'));
+            if ($summary) {
+                array_pop($columns);
+                $records = array_map(static function (array $record): array {
+                    unset($record['score']);
+                    return $record;
+                }, $records);
+            } else {
+                require_once __DIR__ . '/registration.php';
+                $available = available_offerings((int) $user['id']);
+                $notice = !empty($_SESSION['registration_notice']);
+                unset($_SESSION['registration_notice']);
+            }
             break;
         case 'lecturer':
             $heading = 'Assigned courses';
@@ -44,6 +57,12 @@ function dashboard(array $user): array
                     AND r.status = 'submitted'
                 WHERE o.department_id = ? AND o.semester_id = ?
                 GROUP BY d.name, c.code, c.title ORDER BY c.code", [$user['department_id'], $semester]);
+            $departmentRegistrations = rows('SELECT s.matric_number, u.name, c.code, c.title, c.units
+                FROM registrations g JOIN students s ON s.user_id = g.student_id
+                JOIN users u ON u.id = s.user_id JOIN offerings o ON o.id = g.offering_id
+                JOIN courses c ON c.id = o.course_id
+                WHERE s.department_id = ? AND o.department_id = s.department_id AND o.semester_id = ?
+                ORDER BY s.matric_number, c.code', [$user['department_id'], $semester]);
             break;
         case 'super_admin':
             $heading = 'University overview';
@@ -55,5 +74,8 @@ function dashboard(array $user): array
             break;
     }
 
-    return compact('user', 'term', 'heading', 'columns', 'records') + ['profile' => $profile ?? []];
+    return compact('user', 'term', 'heading', 'columns', 'records') + [
+        'profile' => $profile ?? [], 'totalUnits' => $totalUnits ?? 0, 'available' => $available ?? [],
+        'notice' => $notice ?? false, 'departmentRegistrations' => $departmentRegistrations ?? [],
+    ];
 }
