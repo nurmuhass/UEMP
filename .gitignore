@@ -1,0 +1,16 @@
+# Local configuration, database exports, and private keys
+.env
+.env.*
+!.env.example
+*.local.ini
+*.local.conf
+*.sql.gz
+*.sql.zip
+*.dump
+*.log
+*.pem
+*.key
+*.pfx
+*.p12
+/secrets/
+/backups/
