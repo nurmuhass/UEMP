@@ -77,7 +77,7 @@ Expect (Request $lecturer $class POST (Score save 0 30 61)) 422
 Expect (Request $lecturer $class POST (Score save 0 30 56 5)) 404
 Expect (Request $admin $review POST (Review approve 0)) 409
 Expect (Request $lecturer $class POST (Score save 0)) 303
-Expect (Request $lecturer $class) 200 '86 · A'
+Expect (Request $lecturer $class) 200 '(?s)Saved total</span><strong>86</strong>.*?Saved grade</span><strong>A</strong>'
 Expect (Request $lecturer $class POST (Score submit 1)) 303
 Expect (Request $lecturer $class POST (Score save 2)) 409
 Expect (Request $admin $review POST (Review reject 2)) 422

@@ -1,6 +1,6 @@
-<div class="d-print-none mb-4">
+<div class="portal-actions d-print-none mb-4">
     <a href="index.php?r=student" class="btn btn-outline-secondary">Back to dashboard</a>
-    <button type="button" class="btn btn-primary" id="print-summary" hidden>Print summary</button>
+    <button type="button" class="btn portal-primary" id="print-summary" hidden>Print summary</button>
 </div>
 <p class="lead"><?= e($data['user']['name']) ?></p>
 <p><?= e($data['profile']['matric_number'] ?? '') ?> · <?= e($data['profile']['program'] ?? '') ?></p>

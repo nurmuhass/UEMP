@@ -3,73 +3,86 @@ $route = $data['route'];
 $review = $data['review'];
 $home = $review ? 'department_admin' : 'lecturer';
 ?>
-<p><a href="index.php?r=<?= e($home) ?>">Back to dashboard</a></p>
-<?php if ($data['id'] === null): ?>
-    <?php if (!$data['offerings']): ?>
-        <p>No offerings available.</p>
+<nav class="portal-actions mb-4" aria-label="Result navigation">
+    <a class="btn btn-outline-secondary" href="index.php?r=<?= e($home) ?>">Back to dashboard</a>
+    <?php if ($data['id'] !== null): ?>
+        <a class="btn btn-outline-secondary" href="index.php?r=<?= e($route) ?>">All offerings</a>
     <?php endif ?>
-    <ul class="list-group">
-        <?php foreach ($data['offerings'] as $offering): ?>
-            <li class="list-group-item">
-                <a href="index.php?r=<?= e($route) ?>&amp;offering=<?= (int) $offering['id'] ?>">
-                    <?= e($offering['code'] . ' · ' . $offering['title']) ?>
-                </a>
-                <span class="text-body-secondary"><?= e($offering['label'] . ' · ' . $offering['semester']) ?></span>
-            </li>
-        <?php endforeach ?>
-    </ul>
+</nav>
+<?php if ($data['id'] === null): ?>
+    <section class="portal-panel portal-section" aria-labelledby="result-offerings">
+        <h2 id="result-offerings"><?= $review ? 'Department offerings' : 'Assigned offerings' ?></h2>
+        <?php if (!$data['offerings']): ?>
+            <p class="portal-empty">No offerings available.</p>
+        <?php else: ?>
+            <ul class="portal-offerings">
+                <?php foreach ($data['offerings'] as $offering): ?>
+                    <li>
+                        <div>
+                            <a class="portal-course-link" href="index.php?r=<?= e($route) ?>&amp;offering=<?= (int) $offering['id'] ?>">
+                                <span class="portal-course-code"><?= e($offering['code']) ?></span>
+                                <?= e($offering['title']) ?>
+                            </a>
+                            <span class="portal-muted"><?= e($offering['label'] . ' · ' . $offering['semester']) ?></span>
+                        </div>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        <?php endif ?>
+    </section>
 <?php else: ?>
     <?php $offering = $data['offerings'][0]; ?>
-    <p><a href="index.php?r=<?= e($route) ?>">All offerings</a></p>
-    <h2 class="h4"><?= e($offering['code'] . ' · ' . $offering['title']) ?></h2>
-    <p class="text-body-secondary"><?= e($offering['label'] . ' · ' . $offering['semester']) ?></p>
-    <?php if (!$data['class']): ?>
-        <p><?= $review ? 'No results have been submitted for this offering.' : 'No students are registered for this offering.' ?></p>
-    <?php endif ?>
+    <section class="portal-panel portal-section mb-4" aria-labelledby="result-course">
+        <p class="portal-eyebrow"><?= e($offering['label'] . ' · ' . $offering['semester']) ?></p>
+        <h2 class="mb-0" id="result-course"><?= e($offering['code'] . ' · ' . $offering['title']) ?></h2>
+        <?php if (!$data['class']): ?>
+            <p class="portal-empty mt-3"><?= $review ? 'No results have been submitted for this offering.' : 'No students are registered for this offering.' ?></p>
+        <?php endif ?>
+    </section>
     <?php foreach ($data['class'] as $student): ?>
         <?php
         $status = $student['status'];
         $id = (int) $student['user_id'];
         $editable = !$review && !in_array($status, ['submitted', 'approved'], true);
+        $total = $status === null ? null : (int) $student['ca'] + (int) $student['exam'];
         ?>
-        <article class="card mb-3">
-            <div class="card-body">
-                <h3 class="h5"><?= e($student['name'] . ' · ' . $student['matric_number']) ?></h3>
-                <p>Status <strong><?= e(ucfirst($status ?? 'No result')) ?></strong></p>
-                <?php if ($status !== null): ?>
-                    <?php $total = (int) $student['ca'] + (int) $student['exam']; ?>
-                    <p>CA <?= (int) $student['ca'] ?>/40 · Exam <?= (int) $student['exam'] ?>/60 · Total and grade <?= $total ?> · <?= e(result_grade($total)) ?></p>
-                <?php endif ?>
-                <?php if ($student['feedback'] !== null): ?>
-                    <p>Review feedback: <?= e($student['feedback']) ?></p>
-                <?php endif ?>
-                <?php if ($editable || ($review && $status === 'submitted')): ?>
-                    <form method="post" action="index.php?r=<?= e($route) ?>&amp;offering=<?= (int) $offering['id'] ?>">
-                        <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
-                        <input type="hidden" name="student_id" value="<?= $id ?>">
-                        <input type="hidden" name="revision" value="<?= (int) ($student['revision'] ?? 0) ?>">
-                        <?php if ($editable): ?>
-                            <div class="row g-3 mb-3">
-                                <div class="col-sm-4">
-                                    <label class="form-label" for="ca-<?= $id ?>">CA (0–40)</label>
-                                    <input class="form-control" id="ca-<?= $id ?>" name="ca" type="number" min="0" max="40" required value="<?= e((string) $student['ca']) ?>">
-                                </div>
-                                <div class="col-sm-4">
-                                    <label class="form-label" for="exam-<?= $id ?>">Exam (0–60)</label>
-                                    <input class="form-control" id="exam-<?= $id ?>" name="exam" type="number" min="0" max="60" required value="<?= e((string) $student['exam']) ?>">
-                                </div>
-                            </div>
+        <article class="portal-panel portal-section portal-result-card" aria-labelledby="student-result-<?= $id ?>">
+            <header class="portal-result-header">
+                <div>
+                    <h3 id="student-result-<?= $id ?>"><?= e($student['name']) ?></h3>
+                    <p class="portal-muted mb-0"><?= e($student['matric_number']) ?></p>
+                </div>
+                <span class="portal-status portal-status-<?= e($status ?? 'none') ?>"><?= e(ucfirst($status ?? 'No result')) ?></span>
+            </header>
+            <?php if (!$editable): ?>
+                <?php require __DIR__ . '/result_scores.php'; ?>
+            <?php endif ?>
+            <?php if ($student['feedback'] !== null): ?>
+                <div class="portal-feedback"><strong>Review feedback</strong><p><?= e($student['feedback']) ?></p></div>
+            <?php endif ?>
+            <?php if ($editable || ($review && $status === 'submitted')): ?>
+                <form method="post" action="index.php?r=<?= e($route) ?>&amp;offering=<?= (int) $offering['id'] ?>">
+                    <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                    <input type="hidden" name="student_id" value="<?= $id ?>">
+                    <input type="hidden" name="revision" value="<?= (int) ($student['revision'] ?? 0) ?>">
+                    <?php if ($editable): ?>
+                        <?php require __DIR__ . '/result_scores.php'; ?>
+                        <div class="portal-actions">
                             <button class="btn btn-outline-primary" name="action" value="save"><?= $status === 'rejected' ? 'Save correction' : 'Save draft' ?></button>
-                            <button class="btn btn-primary" name="action" value="submit"><?= $status === 'rejected' ? 'Resubmit for review' : 'Submit for review' ?></button>
-                        <?php else: ?>
+                            <button class="btn portal-primary" name="action" value="submit"><?= $status === 'rejected' ? 'Resubmit for review' : 'Submit for review' ?></button>
+                        </div>
+                    <?php else: ?>
+                        <div class="portal-review-actions">
                             <label class="form-label" for="feedback-<?= $id ?>">Feedback required for rejection</label>
                             <textarea class="form-control mb-3" id="feedback-<?= $id ?>" name="feedback" maxlength="1000" rows="2"></textarea>
-                            <button class="btn btn-primary" name="action" value="approve">Approve and publish</button>
-                            <button class="btn btn-outline-danger" name="action" value="reject">Reject</button>
-                        <?php endif ?>
-                    </form>
-                <?php endif ?>
-            </div>
+                            <div class="portal-actions">
+                                <button class="btn portal-primary" name="action" value="approve">Approve and publish</button>
+                                <button class="btn btn-outline-danger" name="action" value="reject">Reject</button>
+                            </div>
+                        </div>
+                    <?php endif ?>
+                </form>
+            <?php endif ?>
         </article>
     <?php endforeach ?>
 <?php endif ?>
