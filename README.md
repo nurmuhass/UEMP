@@ -1,7 +1,5 @@
 # University Education Management Portal
 
-UEMP supports course registration, result review, and academic administration. See the [assessment checklist](REQUIREMENTS.md) and [demo walkthrough](DEMO.md).
-
 ## System Architecture
 
 The web server serves `public/`. Browser requests reach [public/index.php](public/index.php), which selects a handler using the `r` query parameter and checks the HTTP method. [app/bootstrap.php](app/bootstrap.php) provides session checks, role guards, CSRF validation, and shared rendering. Handlers in `app/` query MySQL through the PDO connection in [app/db.php](app/db.php). The handler passes data to [app/templates/layout.php](app/templates/layout.php), which renders the portal shell and page template. CSS and JavaScript are served from `public/assets/`.
@@ -14,14 +12,14 @@ The versioned schema and demo SQL live in `database/`. `scripts/seed-demo.php` l
 
 The schema is defined in [001_schema.sql](database/001_schema.sql) and migrations [003](database/003_offering_programs.sql), [005](database/005_result_workflow.sql), and [006](database/006_management.sql).
 
-| Tables | Records and relationships |
-| --- | --- |
-| `faculties`, `departments`, `programs`, `academic_levels` | `departments.faculty_id` references `faculties.id`. Programs and academic levels reference `departments.id` through `department_id`. Each `(department_id, level)` is unique in `academic_levels`. |
-| `users`, `students` | `users` stores unique email, password hash, contact details, role, and account status. `users.department_id` references `departments.id` and is null for Super Admins. A student profile uses `students.user_id` as its primary key and has a unique `matric_number`. Composite foreign keys `(user_id, department_id)` and `(program_id, department_id)` tie the profile to a user and program in the same department. Lecturer profiles are `users` rows with `role='lecturer'`. |
-| `academic_sessions`, `semesters`, `current_semester` | `semesters.session_id` references `academic_sessions.id`. `(session_id, name)` is unique. The singleton row in `current_semester` references the active term through `semester_id`. |
-| `courses`, `offerings`, `offering_programs` | Courses belong to a department and have a unique `code`, `units`, and `academic_level`. An offering uses `semester_id` to reference the term and composite keys `(course_id, department_id)` and `(lecturer_id, department_id)` to reference the course and lecturer account in that department. `UNIQUE (course_id, semester_id)` allows one offering per course per term. `offering_programs` references offerings and programs with primary key `(offering_id, program_id)`. |
-| `registrations`, `results` | `registrations.student_id` references `students.user_id`, and `offering_id` references `offerings.id`. The primary key `(student_id, offering_id)` prevents duplicate registration. `results` uses the same pair as both its primary key and foreign key to `registrations`. It stores `ca`, `exam`, `status`, `feedback`, and `revision`. |
-| `result_audit`, `admin_audit`, `management_lock` | The audit tables reference `users.id` through `actor_id` and store action, timestamp, and before/after JSON. `result_audit` references the result through `(student_id, offering_id)`. `admin_audit` identifies the managed record by `entity` and `entity_id`. The singleton `management_lock` row serializes management writes. |
+| Tables                                                    | Records and relationships                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `faculties`, `departments`, `programs`, `academic_levels` | `departments.faculty_id` references `faculties.id`. Programs and academic levels reference `departments.id` through `department_id`. Each `(department_id, level)` is unique in `academic_levels`.                                                                                                                                                                                                                                                                                 |
+| `users`, `students`                                       | `users` stores unique email, password hash, contact details, role, and account status. `users.department_id` references `departments.id` and is null for Super Admins. A student profile uses `students.user_id` as its primary key and has a unique `matric_number`. Composite foreign keys `(user_id, department_id)` and `(program_id, department_id)` tie the profile to a user and program in the same department. Lecturer profiles are `users` rows with `role='lecturer'`. |
+| `academic_sessions`, `semesters`, `current_semester`      | `semesters.session_id` references `academic_sessions.id`. `(session_id, name)` is unique. The singleton row in `current_semester` references the active term through `semester_id`.                                                                                                                                                                                                                                                                                                |
+| `courses`, `offerings`, `offering_programs`               | Courses belong to a department and have a unique `code`, `units`, and `academic_level`. An offering uses `semester_id` to reference the term and composite keys `(course_id, department_id)` and `(lecturer_id, department_id)` to reference the course and lecturer account in that department. `UNIQUE (course_id, semester_id)` allows one offering per course per term. `offering_programs` references offerings and programs with primary key `(offering_id, program_id)`.    |
+| `registrations`, `results`                                | `registrations.student_id` references `students.user_id`, and `offering_id` references `offerings.id`. The primary key `(student_id, offering_id)` prevents duplicate registration. `results` uses the same pair as both its primary key and foreign key to `registrations`. It stores `ca`, `exam`, `status`, `feedback`, and `revision`.                                                                                                                                         |
+| `result_audit`, `admin_audit`, `management_lock`          | The audit tables reference `users.id` through `actor_id` and store action, timestamp, and before/after JSON. `result_audit` references the result through `(student_id, offering_id)`. `admin_audit` identifies the managed record by `entity` and `entity_id`. The singleton `management_lock` row serializes management writes.                                                                                                                                                  |
 
 ## Technology Stack
 
@@ -81,12 +79,12 @@ $sessionDir = New-Item -ItemType Directory -Force (Join-Path $env:TEMP "$dbName-
 
 Open [the local sign-in page](http://127.0.0.1:8085/index.php?r=login). Use your selected HTTP port if you changed it. The four synthetic accounts below share the demo password **`PortalDemo!2026`**.
 
-| Role | Email |
-| --- | --- |
-| Student | `student@example.test` |
-| Lecturer | `lecturer@example.test` |
+| Role             | Email                           |
+| ---------------- | ------------------------------- |
+| Student          | `student@example.test`          |
+| Lecturer         | `lecturer@example.test`         |
 | Department Admin | `department_admin@example.test` |
-| Super Admin | `super_admin@example.test` |
+| Super Admin      | `super_admin@example.test`      |
 
 The seeder supplies the demo hash when it loads `002_demo.sql` and skips a database that already has users. Run each migration once. Use a new database name for a clean repeat. From another terminal, run `pwsh -NoProfile -File tests/smoke.ps1 -Base http://127.0.0.1:8085`.
 
