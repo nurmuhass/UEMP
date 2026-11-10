@@ -7,14 +7,21 @@ $portalLinks = match ($portalRole) {
         'lecturer_reports' => 'Course performance'],
     'department_admin' => ['department_admin' => 'Dashboard', 'review_results' => 'Review results',
         'manage_department' => 'Manage department', 'department_reports' => 'Department reports'],
+    'super_admin' => ['super_admin' => 'Dashboard', 'manage_university' => 'Manage university',
+        'university_reports' => 'Monitoring and audit'],
     default => [],
 };
 if ($view === 'academic_history' && $data['print']) {
     $portalLinks['result_statement'] = 'Result statement';
 }
-$portalSection = $portalRole === 'department_admin' ? 'Department workspace'
-    : ($portalRole === 'lecturer' ? 'Lecturer workspace' : 'Student workspace');
-$activePage = $studentDashboard ? 'student' : $workflowRoute;
+$portalSection = match ($portalRole) {
+    'student' => 'Student workspace',
+    'lecturer' => 'Lecturer workspace',
+    'department_admin' => 'Department workspace',
+    'super_admin' => 'University administration',
+    default => 'University portal',
+};
+$activePage = $view === 'dashboard' ? $portalRole : ($_GET['r'] ?? null);
 ?>
 <a class="portal-skip" href="#portal-main">Skip to content</a>
 <div class="portal-shell">
@@ -61,9 +68,9 @@ $activePage = $studentDashboard ? 'student' : $workflowRoute;
     <main id="portal-main" class="portal-main" tabindex="-1">
         <?php if ($view !== 'login'): ?>
             <header class="portal-page-header">
-                <p class="portal-eyebrow"><?= e($portalLinks ? $portalSection : 'University portal') ?></p>
+                <p class="portal-eyebrow"><?= e($portalSection) ?></p>
                 <h1><?= e($title) ?></h1>
-                <?php if ($studentDashboard): ?>
+                <?php if ($view === 'dashboard'): ?>
                     <p>Welcome, <?= e($data['user']['name']) ?>.</p>
                 <?php endif ?>
             </header>

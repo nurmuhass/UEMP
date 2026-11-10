@@ -1,10 +1,44 @@
 # University Education Management Portal
 
-UEMP manages university accounts, academic offerings, course registration, and the review and publication of results. See the [assessment checklist](REQUIREMENTS.md), [demo walkthrough](DEMO.md), and [verification record](VERIFICATION.md).
+UEMP supports course registration, result review, and academic administration. See the [assessment checklist](REQUIREMENTS.md) and [demo walkthrough](DEMO.md).
 
-## Fresh local setup
+## System Architecture
 
-Use PHP with PDO MySQL, a running MySQL or MariaDB instance, and PowerShell 7. Run these commands from the project root. The defaults use XAMPP paths and the local XAMPP root account with an empty password. For another local MySQL instance, set the client path, port, and login to match it. If the local account requires a password, add `-p` to `$mysqlArgs` and set `DB_PASSWORD` privately in the PHP process environment.
+The web server serves `public/`. Browser requests reach [public/index.php](public/index.php), which selects a handler using the `r` query parameter and checks the HTTP method. [app/bootstrap.php](app/bootstrap.php) provides session checks, role guards, CSRF validation, and shared rendering. Handlers in `app/` query MySQL through the PDO connection in [app/db.php](app/db.php). The handler passes data to [app/templates/layout.php](app/templates/layout.php), which renders the portal shell and page template. CSS and JavaScript are served from `public/assets/`.
+
+For example, `POST index.php?r=register` checks the student session and CSRF token, then passes the session user ID and submitted offering ID to [app/registration.php](app/registration.php). A single `INSERT … SELECT` checks the active semester, department, program, and level as it inserts the registration. Success redirects to the Student Dashboard, which reloads the registered courses and credit total.
+
+The versioned schema and demo SQL live in `database/`. `scripts/seed-demo.php` loads the base fixtures, and `tests/` contains PowerShell checks.
+
+## Database Structure and Relationships
+
+The schema is defined in [001_schema.sql](database/001_schema.sql) and migrations [003](database/003_offering_programs.sql), [005](database/005_result_workflow.sql), and [006](database/006_management.sql).
+
+| Tables | Records and relationships |
+| --- | --- |
+| `faculties`, `departments`, `programs`, `academic_levels` | `departments.faculty_id` references `faculties.id`. Programs and academic levels reference `departments.id` through `department_id`. Each `(department_id, level)` is unique in `academic_levels`. |
+| `users`, `students` | `users` stores unique email, password hash, contact details, role, and account status. `users.department_id` references `departments.id` and is null for Super Admins. A student profile uses `students.user_id` as its primary key and has a unique `matric_number`. Composite foreign keys `(user_id, department_id)` and `(program_id, department_id)` tie the profile to a user and program in the same department. Lecturer profiles are `users` rows with `role='lecturer'`. |
+| `academic_sessions`, `semesters`, `current_semester` | `semesters.session_id` references `academic_sessions.id`. `(session_id, name)` is unique. The singleton row in `current_semester` references the active term through `semester_id`. |
+| `courses`, `offerings`, `offering_programs` | Courses belong to a department and have a unique `code`, `units`, and `academic_level`. An offering uses `semester_id` to reference the term and composite keys `(course_id, department_id)` and `(lecturer_id, department_id)` to reference the course and lecturer account in that department. `UNIQUE (course_id, semester_id)` allows one offering per course per term. `offering_programs` references offerings and programs with primary key `(offering_id, program_id)`. |
+| `registrations`, `results` | `registrations.student_id` references `students.user_id`, and `offering_id` references `offerings.id`. The primary key `(student_id, offering_id)` prevents duplicate registration. `results` uses the same pair as both its primary key and foreign key to `registrations`. It stores `ca`, `exam`, `status`, `feedback`, and `revision`. |
+| `result_audit`, `admin_audit`, `management_lock` | The audit tables reference `users.id` through `actor_id` and store action, timestamp, and before/after JSON. `result_audit` references the result through `(student_id, offering_id)`. `admin_audit` identifies the managed record by `entity` and `entity_id`. The singleton `management_lock` row serializes management writes. |
+
+## Technology Stack
+
+- **Backend** — Plain PHP 8 syntax, built-in sessions and password APIs, and PDO with `pdo_mysql`. No Composer install or application framework is needed.
+- **Database** — MySQL-compatible SQL with transactional tables, foreign keys, check constraints, JSON audit fields, and a window function in migration `006`. Local checks used PHP 8.0.30 and XAMPP MariaDB 10.4.32. The [verification record](VERIFICATION.md) documents a separate Oracle MySQL 8.4.13 run.
+- **Frontend** — Server-rendered HTML, Bootstrap **5.3.8 CSS** from a CDN with an integrity hash, [portal-theme.css](public/assets/portal-theme.css), and [portal.js](public/assets/portal.js). No frontend build step is needed.
+
+## Security Implementation
+
+- **Passwords and sessions.** [app/manage.php](app/manage.php) and [scripts/seed-demo.php](scripts/seed-demo.php) use `password_hash()`. [public/index.php](public/index.php) checks credentials with `password_verify()` and rotates the session ID on successful login. Strict-mode, cookie-only sessions use HttpOnly, SameSite=Lax, and Secure by default. [app/bootstrap.php](app/bootstrap.php) reloads the active account and verifies its role on protected requests, expires idle sessions after 30 minutes, and destroys the session on logout.
+- **Permissions and ownership.** Students use their session identity for registration, profile changes, and approved results. Lecturers are scoped to assigned offerings and registered students. Department Admins are scoped to their department in management, review, and reports. Super Admins manage university-wide records and assign fixed roles. See [app/registration.php](app/registration.php), [app/student_academics.php](app/student_academics.php), [app/results.php](app/results.php), [app/manage_catalog.php](app/manage_catalog.php), and [app/reports.php](app/reports.php).
+- **Forms and queries.** Writes use POST and session-bound CSRF tokens generated with `random_bytes()` and compared using `hash_equals()`. Handlers validate identifiers, score ranges, permitted fields, and scoped choices on the server. PDO binds input values using native prepared statements. Dynamic management table and column names come from a fixed catalog. Templates escape text through `e()`.
+- **Approval and audit.** [app/results.php](app/results.php) checks the active actor and locks records in a transaction. Lecturers save or submit scores. Department Admins approve or reject submitted scores, with feedback required for rejection. Lecturers can correct and resubmit rejected scores. Submitted and approved scores are locked, stale revisions return HTTP 409, and only approved results appear to their owners. Result and management changes commit together with their audit entries. Management audits omit passwords and hashes.
+
+## Setup Instructions
+
+From a fresh clone, open PowerShell 7 in the repository root. Start MySQL or XAMPP MariaDB and enable PHP's `pdo_mysql` extension. The following commands use XAMPP paths and an empty-password **local** root account. Adjust the client path, port, and user if needed. Set `$askDbPassword` to `$true` for a password-protected account. Use a fresh database name beginning with `uemp_demo`.
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -14,24 +48,29 @@ $dbName = 'uemp_demo'
 $dbPort = '3306'
 $dbUser = 'root'
 $httpPort = '8085'
-if ($dbName -notmatch '^uemp_demo(?:_[a-z0-9]+)?$') { throw 'Use a dedicated demo database name' }
-$mysqlArgs = @('-h','127.0.0.1','-P',$dbPort,'-u',$dbUser)
+$askDbPassword = $false
+
+if ($dbName -cnotmatch '^uemp_demo(?:_[a-z0-9]+)?$') { throw 'Choose a dedicated demo database name' }
+$mysqlArgs = @('-h', '127.0.0.1', '-P', $dbPort, '-u', $dbUser)
+if ($askDbPassword) { $mysqlArgs += '-p' }
 
 & $mysql @mysqlArgs -e "CREATE DATABASE $dbName CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-if ($LASTEXITCODE) { throw 'Database creation failed. Choose a fresh database name.' }
+if ($LASTEXITCODE) { throw 'Database creation failed. Choose a fresh name if it already exists.' }
 Get-Content database/001_schema.sql -Raw | & $mysql @mysqlArgs $dbName
-if ($LASTEXITCODE) { throw 'Base schema failed' }
+if ($LASTEXITCODE) { throw 'Base schema import failed' }
 
 $env:DB_HOST = '127.0.0.1'
 $env:DB_PORT = $dbPort
 $env:DB_NAME = $dbName
 $env:DB_USER = $dbUser
-[Environment]::SetEnvironmentVariable('DB_PASSWORD', '', [EnvironmentVariableTarget]::Process)
+$dbPassword = if ($askDbPassword) { Read-Host 'Database password' -MaskInput } else { '' }
+[Environment]::SetEnvironmentVariable('DB_PASSWORD', $dbPassword, [EnvironmentVariableTarget]::Process)
+Remove-Variable dbPassword
 $env:SESSION_SECURE = '0'
+
 & $php scripts/seed-demo.php
 if ($LASTEXITCODE) { throw 'Demo seed failed' }
-
-foreach ($file in '003_offering_programs.sql','004_demo_offerings.sql','005_result_workflow.sql','006_management.sql') {
+foreach ($file in '003_offering_programs.sql', '004_demo_offerings.sql', '005_result_workflow.sql', '006_management.sql') {
     Get-Content "database/$file" -Raw | & $mysql @mysqlArgs $dbName
     if ($LASTEXITCODE) { throw "Failed to apply $file" }
 }
@@ -40,11 +79,7 @@ $sessionDir = New-Item -ItemType Directory -Force (Join-Path $env:TEMP "$dbName-
 & $php -d "session.save_path=$($sessionDir.FullName)" -d display_errors=0 -S "127.0.0.1:${httpPort}" -t public
 ```
 
-Open [the portal](http://127.0.0.1:8085/) or use your selected HTTP port. From a second terminal, run `pwsh -NoProfile -File tests/smoke.ps1`. For a repeat walkthrough, use a new database name such as `uemp_demo_second`. The seed command loads `002_demo.sql` transactionally and skips a database that already has users. Each schema migration and the optional demo offering file applies once per database.
-
-## Demo logins
-
-These are public fixture accounts for synthetic assessment data. All four use **`PortalDemo!2026`**.
+Open [the local sign-in page](http://127.0.0.1:8085/index.php?r=login). Use your selected HTTP port if you changed it. The four synthetic accounts below share the demo password **`PortalDemo!2026`**.
 
 | Role | Email |
 | --- | --- |
@@ -53,58 +88,16 @@ These are public fixture accounts for synthetic assessment data. All four use **
 | Department Admin | `department_admin@example.test` |
 | Super Admin | `super_admin@example.test` |
 
-The first three are in Computer Science. Economics fixtures use `student.econ@example.test`, `lecturer.econ@example.test`, and `department_admin.econ@example.test`. `suspended@example.test` and `deactivated@example.test` are blocked fixtures. The current term is the first semester of 2026/2027.
+The seeder supplies the demo hash when it loads `002_demo.sql` and skips a database that already has users. Run each migration once. Use a new database name for a clean repeat. From another terminal, run `pwsh -NoProfile -File tests/smoke.ps1 -Base http://127.0.0.1:8085`.
 
-## Architecture and permissions
+For hosting, serve only `public/` over HTTPS and use a writable PHP session directory outside it. Apache needs `AllowOverride AuthConfig` where the included `.htaccess` files apply. Supply `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` through the process environment or host secret manager. The app reads environment variables directly. Leave `SESSION_SECURE` unset or set it to `1`, and keep PHP errors in a private log.
 
-- `public/index.php` dispatches requests. `app/bootstrap.php` handles session validation, role guards, CSRF, and shared rendering. `app/db.php` opens a PDO connection using environment settings and native prepared statements.
-- The domain code in `app/` handles registration, result transitions, management, profiles, and reports. Shared templates live in `app/templates/`. Bootstrap CSS uses a pinned CDN asset with integrity checking. Vanilla JavaScript provides printing and the password visibility toggle.
-- Passwords are hashed, and successful login rotates the session ID. The cookie is HttpOnly and SameSite=Lax, with Secure enabled by default. The app rechecks account role and status on protected requests and expires sessions after 30 minutes of inactivity. State-changing requests use POST and session-bound CSRF tokens.
-- Students access their own records and eligible offerings. Lecturers manage scores only for students registered in assigned offerings. Department Admins manage and review records in their own department. Super Admins manage university-wide records, assign fixed roles, change account status, and view university-wide reports and audits. The [role-permission matrix](REQUIREMENTS.md#role-permission-matrix) lists individual grants.
-- Results move from draft to submitted, then to approved or rejected. Rejected scores can be corrected and resubmitted. Submitted and approved scores are locked. Review rejects stale revisions. The student sees only approved scores belonging to their own account. Result and administrative audits are written in the same transaction as the corresponding change.
+Use a separate setup identity for schema changes. The runtime identity needs SELECT across the schema, INSERT and UPDATE on managed records and results, INSERT on registrations, program mappings, and audit tables, DELETE on student profiles and offering-program mappings, and UPDATE on `registrations` and `management_lock` for locking reads. Keep demo fixtures on synthetic assessment instances. A real-data installation needs private initial administrator provisioning. The repository provides the demo seeder. Hosted HTTPS, document-root restrictions, and real-data provisioning were outside the current local check. See the [live URL checklist](VERIFICATION.md#live-url-checklist).
 
-## Database schema
+## Major Technical Decisions
 
-The executable schema is [001_schema.sql](database/001_schema.sql) plus [003](database/003_offering_programs.sql), [005](database/005_result_workflow.sql), and [006](database/006_management.sql). Files `002` and `004` contain synthetic demo data.
-
-- Faculties contain departments. Departments contain programs, academic levels, courses, and departmental accounts. A student profile references its user and a program in the same department.
-- Academic sessions contain semesters. The singleton `current_semester` row selects the active term. An offering links a course, semester, and assigned lecturer. `offering_programs` maps offerings to eligible programs.
-- Registrations join students to offerings. The composite primary key on student and offering blocks duplicates. A result references that same pair, so every result belongs to a registration.
-- `result_audit` references a result and its actor. `admin_audit` records the actor, affected entity, and before and after values. Passwords and password hashes are excluded from the audit.
-
-When upgrading, apply only migrations missing from the existing database in order. Migration `003` maps existing offerings automatically in departments with one program. Add explicit mappings for departments with multiple programs. `005` preserves existing results and starts auditing future changes. `006` derives department levels from existing courses and students.
-
-## Grading and GPA
-
-CA is an integer from 0 to 40, and the exam is an integer from 0 to 60. The server adds them and applies the following scale.
-
-| Total | Grade | Grade points |
-| --- | --- | --- |
-| 70–100 | A | 5 |
-| 60–69 | B | 4 |
-| 50–59 | C | 3 |
-| 45–49 | D | 2 |
-| 40–44 | E | 1 |
-| 0–39 | F | 0 |
-
-Semester GPA is the sum of each approved course's grade points multiplied by its credit units, divided by total approved credit units for the semester. CGPA applies the same formula across approved terms. Approved failures count in the denominator. Pending results are excluded.
-
-## Deploy the assessment instance
-
-1. Create a dedicated database with `utf8mb4` and use a separate setup identity to apply the same schema and migration order as the local instructions. For a synthetic assessment instance, seed `002` through the CLI and apply demo file `004`. For a real-data installation, omit both demo data files and provision the initial administrator privately.
-2. Configure Apache or another production PHP host to serve only the absolute `public/` directory over HTTPS. Keep the project outside any other document root. Apache installations that use the included access files need `AllowOverride AuthConfig`. Point PHP sessions at a writable directory outside the public root.
-3. Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in the host environment or secret manager. Leave `SESSION_SECURE` unset or set it to `1`. Keep `display_errors` disabled and send PHP errors to a private log. Store credentials outside Git and outside the public root.
-4. Give the dedicated runtime database account the permissions below. Keep DDL and account grants with the setup identity.
-5. Run the [live URL checks](VERIFICATION.md#live-url-checklist). Share the assessment URL and demo credentials for the synthetic instance.
-
-### Runtime database grants
-
-| Grant | Tables |
-| --- | --- |
-| SELECT | All portal tables |
-| INSERT and UPDATE | `faculties`, `departments`, `programs`, `academic_levels`, `academic_sessions`, `semesters`, `current_semester`, `users`, `students`, `courses`, `offerings`, `results` |
-| INSERT | `registrations`, `offering_programs`, `result_audit`, `admin_audit` |
-| UPDATE | `registrations`, `management_lock` for locking reads |
-| DELETE | `students`, `offering_programs` |
-
-MySQL requires an additional privilege such as UPDATE for `SELECT ... FOR UPDATE`. The application uses those reads to serialize management writes and result changes. [MySQL locking reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html)
+1. **Server-rendered PHP.** A front controller and shared templates keep the request path short and make local setup possible with one PHP process. Navigation and form submissions generally reload the page.
+2. **Separate courses from offerings.** A course holds catalog data, while an offering holds the term, lecturer, and eligible program mappings. This supports teaching the same course in later terms, at the cost of extra joins and allocation setup.
+3. **Enforce scope at the record level.** Fixed roles select the handler, and the session identity, department, or lecturer assignment limits the query. Composite keys add database enforcement for related records. A new permission policy requires code changes.
+4. **Use explicit result states and transactional audits.** Draft, submitted, rejected, and approved states separate marking from publication. Row locks and revisions protect review decisions from stale forms. This adds transaction and audit storage overhead.
+5. **Calculate grades and GPA on the server.** [app/results.php](app/results.php) adds CA (0–40) and exam (0–60), then applies A/B/C/D/E/F thresholds of 70/60/50/45/40/0. [app/student_academics.php](app/student_academics.php) assigns 5/4/3/2/1/0 points and divides credit-weighted points by approved credit units per semester or across all terms. Approved failures count. A grading policy change requires a code change and can affect historical calculations.

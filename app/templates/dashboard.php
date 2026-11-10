@@ -1,20 +1,23 @@
-<p class="lead">Welcome, <?= e($data['user']['name']) ?>.</p>
-<p class="text-body-secondary">
-    <?= $data['term'] ? e($data['term']['label'] . ' · ' . $data['term']['name']) : 'No current semester is configured.' ?>
-</p>
 <?php
-$links = match ($data['user']['role']) {
+$dashboardActions = match ($data['user']['role']) {
     'lecturer' => ['lecturer_results' => 'Class lists and results', 'lecturer_reports' => 'Course performance'],
-    'department_admin' => ['manage_department' => 'Manage department', 'review_results' => 'Review results',
+    'department_admin' => ['review_results' => 'Review results', 'manage_department' => 'Manage department',
         'department_reports' => 'Department reports'],
     'super_admin' => ['manage_university' => 'Manage university', 'university_reports' => 'Monitoring and audit'],
 };
 ?>
-<nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Dashboard tools">
-    <?php foreach ($links as $route => $label): ?>
-        <a class="btn btn-outline-primary" href="index.php?r=<?= e($route) ?>"><?= e($label) ?></a>
-    <?php endforeach ?>
-</nav>
+<section class="portal-panel portal-term mb-4" aria-labelledby="dashboard-term">
+    <div>
+        <p class="portal-eyebrow">Current semester</p>
+        <h2 id="dashboard-term"><?= $data['term'] ? e($data['term']['label'] . ' · ' . $data['term']['name']) : 'No current semester is configured.' ?></h2>
+    </div>
+    <nav class="portal-actions d-print-none" aria-label="Dashboard tools">
+        <?php foreach ($dashboardActions as $destination => $label): ?>
+            <a class="btn <?= $destination === array_key_first($dashboardActions) ? 'portal-primary' : 'btn-outline-primary' ?>"
+               href="index.php?r=<?= e($destination) ?>"><?= e($label) ?></a>
+        <?php endforeach ?>
+    </nav>
+</section>
 <?php require __DIR__ . '/records.php'; ?>
 <?php if ($data['user']['role'] === 'department_admin'): ?>
     <div class="mt-4">

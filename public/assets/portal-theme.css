@@ -148,6 +148,7 @@
     border-inline-start: 4px solid var(--portal-blue);
 }
 
+.portal-term:has(nav) { flex-wrap: wrap; }
 .portal-term h2 { margin: 0 0 var(--portal-xs); font-size: clamp(1.25rem, 2.6vw, 1.65rem); font-weight: 730; }
 .portal-term p:last-child { color: var(--portal-muted); }
 .portal-primary {
@@ -250,7 +251,7 @@
     outline-offset: 3px;
 }
 .portal-sidebar :focus-visible { outline-color: #a9c8ff; }
-.portal-login-card .form-control:focus {
+.portal-themed .form-control:focus, .portal-themed .form-select:focus {
     border-color: var(--portal-focus);
     outline: 2px solid var(--portal-focus);
     outline-offset: 2px;
@@ -352,8 +353,8 @@
     font-size: .8125rem;
     font-weight: 700;
 }
-.portal-status-approved { border-color: var(--portal-success-border); background: var(--portal-success-bg); color: var(--portal-success-text); }
-.portal-status-rejected { border-color: var(--portal-error-border); background: var(--portal-error-bg); color: var(--portal-error-text); }
+.portal-status-approved, .portal-status-active, .portal-status-current { border-color: var(--portal-success-border); background: var(--portal-success-bg); color: var(--portal-success-text); }
+.portal-status-rejected, .portal-status-suspended, .portal-status-deactivated { border-color: var(--portal-error-border); background: var(--portal-error-bg); color: var(--portal-error-text); }
 .portal-status-submitted { border-color: #c3d5fa; background: var(--portal-blue-light); color: var(--portal-blue-hover); }
 .portal-status-draft { border-color: #ead7a2; background: #fff7df; color: #65470a; }
 
@@ -414,12 +415,43 @@
 @media print {
     .portal-themed { background: white; color: black; }
     .portal-shell { display: block; min-height: 0; }
-    .portal-sidebar, .portal-skip { display: none; }
+    .portal-sidebar, .portal-skip, .portal-themed form { display: none; }
     .portal-main { width: 100%; padding: 0; }
     .portal-panel, .portal-themed .card { box-shadow: none; }
     .portal-themed .table-responsive { overflow: visible; }
     .portal-themed .table th { white-space: normal; }
+    .portal-themed .table td { overflow-wrap: anywhere; }
     .portal-themed .table > :not(caption) > * > * { padding: .25rem; }
     .portal-themed .table tr, .portal-academic-summary { break-inside: avoid; }
     .portal-themed .card-header { break-after: avoid; }
 }
+
+.portal-subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--portal-xs);
+    padding: var(--portal-xs);
+    border: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius);
+    background: var(--portal-panel);
+}
+.portal-subnav a {
+    padding: var(--portal-xs) var(--portal-sm);
+    border-radius: .5rem;
+    color: var(--portal-muted);
+    text-decoration: none;
+}
+.portal-subnav a:hover, .portal-subnav [aria-current="page"] {
+    background: var(--portal-blue-light);
+    color: var(--portal-blue-hover);
+}
+.portal-subnav [aria-current="page"] { font-weight: 700; }
+.portal-form-panel { max-width: 58rem; }
+.portal-form-panel .form-label { color: var(--portal-text); font-weight: 650; }
+.portal-form-panel .form-control, .portal-form-panel .form-select {
+    min-height: 2.75rem;
+    border-color: #aab8ca;
+}
+.portal-list-actions { flex-wrap: nowrap; }
+.portal-status { display: inline-block; white-space: nowrap; }
+.portal-report-table td { overflow-wrap: anywhere; }

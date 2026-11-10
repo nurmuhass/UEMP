@@ -5,7 +5,7 @@
         <p class="portal-muted">Use your university account to access the portal.</p>
     </header>
     <?php if (isset($data['error'])): ?>
-        <p class="alert alert-danger" role="alert"><?= e($data['error']) ?></p>
+        <p class="portal-notice portal-notice-error" role="alert"><?= e($data['error']) ?></p>
     <?php endif ?>
     <form method="post" action="index.php?r=login">
         <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">

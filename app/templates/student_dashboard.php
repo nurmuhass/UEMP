@@ -5,9 +5,9 @@
         <p><?= $data['available'] ? 'Review the courses you can register for this semester.' : 'Review your registered courses and credit units.' ?></p>
     </div>
     <?php if ($data['available']): ?>
-        <a class="btn portal-primary" href="#available-offerings">View available offerings <span aria-hidden="true">↓</span></a>
+        <a class="btn portal-primary d-print-none" href="#available-offerings">View available offerings <span aria-hidden="true">↓</span></a>
     <?php else: ?>
-        <a class="btn portal-primary" href="index.php?r=registration_summary">View registration summary</a>
+        <a class="btn portal-primary d-print-none" href="index.php?r=registration_summary">View registration summary</a>
     <?php endif ?>
 </section>
 
@@ -48,7 +48,7 @@
     <section class="portal-panel portal-section" aria-labelledby="student-details">
         <div class="portal-section-heading">
             <h2 id="student-details">Student details</h2>
-            <a href="index.php?r=student_profile">Edit profile</a>
+            <a class="d-print-none" href="index.php?r=student_profile">Edit profile</a>
         </div>
         <dl class="portal-profile">
             <?php foreach ($data['profile'] as $key => $value): ?>

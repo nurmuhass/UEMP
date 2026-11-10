@@ -5,19 +5,18 @@ $record = $data['record'] ?? [];
 $url = 'index.php?r=' . $route . '&entity=' . $entity;
 $home = $data['super'] ? 'super_admin' : 'department_admin';
 ?>
-<p><a href="index.php?r=<?= e($home) ?>">Back to dashboard</a></p>
-<nav class="nav nav-pills flex-wrap gap-1 mb-4" aria-label="Management sections">
+<p class="d-print-none"><a class="btn btn-outline-secondary" href="index.php?r=<?= e($home) ?>">Back to dashboard</a></p>
+<nav class="portal-subnav d-print-none mb-4" aria-label="Management sections">
     <?php foreach ($data['entities'] as $key => $section): ?>
-        <a class="nav-link<?= $entity === $key ? ' active' : '' ?>"
-           href="index.php?r=<?= e($route) ?>&amp;entity=<?= e($key) ?>"><?= e($section[0]) ?></a>
+        <a href="index.php?r=<?= e($route) ?>&amp;entity=<?= e($key) ?>"<?= $entity === $key ? ' aria-current="page"' : '' ?>><?= e($section[0]) ?></a>
     <?php endforeach ?>
 </nav>
 <?php if (($_GET['saved'] ?? '') === '1'): ?>
-    <p class="alert alert-success" role="status">Changes saved.</p>
+    <p class="portal-notice portal-notice-success d-print-none" role="status">Changes saved.</p>
 <?php endif ?>
-<section class="card mb-4">
-    <div class="card-body">
-        <h2 class="h5"><?= $record ? 'Edit record' : 'Create record' ?></h2>
+<section class="portal-panel portal-section portal-form-panel mb-4 d-print-none" aria-labelledby="management-form">
+    <div>
+        <h2 id="management-form"><?= $record ? 'Edit record' : 'Create record' ?></h2>
         <?php if ($entity === 'users'): ?>
             <p class="text-body-secondary">Department is required for departmental roles. Student fields apply only to students. Leave the password blank when keeping an existing password.</p>
         <?php endif ?>
@@ -53,10 +52,12 @@ $home = $data['super'] ? 'super_admin' : 'department_admin';
                     </div>
                 <?php endforeach ?>
             </div>
-            <button class="btn btn-primary mt-3">Save record</button>
-            <?php if ($record): ?>
-                <a class="btn btn-outline-secondary mt-3" href="<?= e($url) ?>">New record</a>
-            <?php endif ?>
+            <div class="portal-actions mt-3">
+                <button class="btn portal-primary">Save record</button>
+                <?php if ($record): ?>
+                    <a class="btn btn-outline-secondary" href="<?= e($url) ?>">New record</a>
+                <?php endif ?>
+            </div>
         </form>
     </div>
 </section>
@@ -71,34 +72,17 @@ foreach ($listFields as $key => $field) {
     }
 }
 ?>
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead><tr>
-            <?php foreach ($listFields as [$label]): ?><th scope="col"><?= e($label) ?></th><?php endforeach ?>
-            <th scope="col">Actions</th>
-        </tr></thead>
-        <tbody>
-            <?php foreach ($data['records'] as $row): ?>
-                <tr>
-                    <?php foreach ($listFields as $key => $field): ?>
-                        <?php $value = $row[$key] ?? null; ?>
-                        <td><?= e((string) ($labels[$key][$value ?? ''] ?? $value ?? '—')) ?></td>
-                    <?php endforeach ?>
-                    <td>
-                        <a href="<?= e($url . '&id=' . $row['id']) ?>">Edit</a>
-                        <?php if ($entity === 'semesters'): ?>
-                            <?php if ((int) $data['current'] === (int) $row['id']): ?>
-                                <span class="badge text-bg-success">Current</span>
-                            <?php else: ?>
-                                <form method="post" action="<?= e($url . '&id=' . $row['id']) ?>">
-                                    <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
-                                    <button class="btn btn-sm btn-outline-primary" name="action" value="current">Set current</button>
-                                </form>
-                            <?php endif ?>
-                        <?php endif ?>
-                    </td>
-                </tr>
-            <?php endforeach ?>
-        </tbody>
-    </table>
-</div>
+<section class="card" aria-labelledby="management-list">
+    <h2 class="card-header h5" id="management-list">Existing records</h2>
+    <?php if ($data['records']): ?>
+        <?php
+        $tableLabel = $data['entities'][$entity][0];
+        $tableColumns = array_column($listFields, 0);
+        $tableRows = $data['records'];
+        $tableRowTemplate = 'manage_row';
+        require __DIR__ . '/table.php';
+        ?>
+    <?php else: ?>
+        <p class="portal-empty m-3">No records yet.</p>
+    <?php endif ?>
+</section>

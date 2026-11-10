@@ -19,7 +19,6 @@ if (printSummary) {
 const portalMenu = document.querySelector('.portal-menu-toggle');
 
 if (portalMenu) {
-    const navigation = document.getElementById(portalMenu.getAttribute('aria-controls'));
     portalMenu.hidden = false;
     portalMenu.setAttribute('aria-expanded', 'false');
 
@@ -28,7 +27,7 @@ if (portalMenu) {
         portalMenu.setAttribute('aria-expanded', String(!expanded));
     });
 
-    navigation.addEventListener('keydown', (event) => {
+    portalMenu.closest('.portal-sidebar').addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && portalMenu.getAttribute('aria-expanded') === 'true'
             && portalMenu.getClientRects().length) {
             portalMenu.setAttribute('aria-expanded', 'false');

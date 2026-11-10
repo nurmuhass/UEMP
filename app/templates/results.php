@@ -3,7 +3,7 @@ $route = $data['route'];
 $review = $data['review'];
 $home = $review ? 'department_admin' : 'lecturer';
 ?>
-<nav class="portal-actions mb-4" aria-label="Result navigation">
+<nav class="portal-actions d-print-none mb-4" aria-label="Result navigation">
     <a class="btn btn-outline-secondary" href="index.php?r=<?= e($home) ?>">Back to dashboard</a>
     <?php if ($data['id'] !== null): ?>
         <a class="btn btn-outline-secondary" href="index.php?r=<?= e($route) ?>">All offerings</a>
@@ -52,7 +52,11 @@ $home = $review ? 'department_admin' : 'lecturer';
                     <h3 id="student-result-<?= $id ?>"><?= e($student['name']) ?></h3>
                     <p class="portal-muted mb-0"><?= e($student['matric_number']) ?></p>
                 </div>
-                <span class="portal-status portal-status-<?= e($status ?? 'none') ?>"><?= e(ucfirst($status ?? 'No result')) ?></span>
+                <?php
+                $badgeKind = $status ?? 'none';
+                $badgeText = ucfirst($status ?? 'No result');
+                require __DIR__ . '/status_badge.php';
+                ?>
             </header>
             <?php if (!$editable): ?>
                 <?php require __DIR__ . '/result_scores.php'; ?>
