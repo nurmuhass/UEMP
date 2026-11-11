@@ -10,7 +10,7 @@ The versioned schema and demo SQL live in `database/`. `scripts/seed-demo.php` l
 
 ## Database Structure and Relationships
 
-The schema is defined in [001_schema.sql](database/001_schema.sql) and migrations [003](database/003_offering_programs.sql), [005](database/005_result_workflow.sql), and [006](database/006_management.sql).
+[Database ER diagram](docs/database-design.md) · [SQL schema](database/001_schema.sql) · Migrations [003](database/003_offering_programs.sql), [005](database/005_result_workflow.sql), and [006](database/006_management.sql).
 
 | Tables                                                    | Records and relationships                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -77,7 +77,7 @@ $sessionDir = New-Item -ItemType Directory -Force (Join-Path $env:TEMP "$dbName-
 & $php -d "session.save_path=$($sessionDir.FullName)" -d display_errors=0 -S "127.0.0.1:${httpPort}" -t public
 ```
 
-Open [the local sign-in page](http://127.0.0.1:8085/index.php?r=login). Use your selected HTTP port if you changed it. The four synthetic accounts below share the demo password **`PortalDemo!2026`**.
+Open [the local sign-in page](http://127.0.0.1:8085/index.php?r=login). Use your selected HTTP port if you changed it. The four synthetic accounts below share the demo password **`12345678`**.
 
 | Role             | Email                           |
 | ---------------- | ------------------------------- |
